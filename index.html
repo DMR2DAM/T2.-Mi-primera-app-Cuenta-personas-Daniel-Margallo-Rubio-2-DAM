@@ -1,0 +1,736 @@
+<!--Práctica realizada por Daniel Margallo Rubio 2ºDAM-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador Mecánico de Personas - Edición 1940s</title>
+
+    <style>
+        /* 
+         ========================================================================
+         TOKENS DE DISEÑO Y VARIABLES CSS (MODO PRENSA 1940 VS MODO FILM NOIR)
+         ========================================================================
+        */
+        :root {
+            /* MODO PRENSA / DÍA (Inspirado en periódicos y papel pergamino de los 40) */
+            --bg-body-1: #f2e6ce;
+            --bg-body-2: #dfceab;
+            --card-bg: #ebdcb9;
+            --card-border-outer: #8a6833;
+            --card-border-inner: #cbb077;
+            --text-primary: #291e14;
+            --text-muted: #5e4832;
+            --brass-grad: linear-gradient(135deg, #e8cc6d 0%, #b88f28 50%, #694b08 100%);
+            --brass-border: #755511;
+            --brass-shadow: rgba(61, 43, 7, 0.4);
+            --counter-bg: #14110d;
+            --counter-text: #f0dfb8;
+            --male-color: #1b324d;
+            --female-color: #6b1f2e;
+            --stamp-bg: rgba(107, 31, 46, 0.08);
+            --stamp-border: #6b1f2e;
+            --stamp-text: #6b1f2e;
+            --dial-bg: #17130e;
+            --dial-grid: #382c1e;
+            --shadow-drop: rgba(30, 20, 10, 0.35);
+            --vignette-opacity: 0.15;
+            --accent-gold: #c99824;
+        }
+
+        body.dark-mode {
+            /* MODO FILM NOIR / NOCHE (Bar de jazz, club nocturno, tonos carbón) */
+            --bg-body-1: #12100e;
+            --bg-body-2: #050404;
+            --card-bg: #1a1612;
+            --card-border-outer: #5e451d;
+            --card-border-inner: #3a2b12;
+            --text-primary: #e8a820;
+            --text-muted: #a3855e;
+            --brass-grad: linear-gradient(135deg, #bd8b13 0%, #7d5705 50%, #362201 100%);
+            --brass-border: #4d3603;
+            --brass-shadow: rgba(0, 0, 0, 0.8);
+            --counter-bg: #080605;
+            --counter-text: #ffce47;
+            --male-color: #3b628c;
+            --female-color: #b03846;
+            --stamp-bg: rgba(232, 168, 32, 0.1);
+            --stamp-border: #e8a820;
+            --stamp-text: #e8a820;
+            --dial-bg: #0a0806;
+            --dial-grid: #2e2215;
+            --shadow-drop: rgba(0, 0, 0, 0.85);
+            --vignette-opacity: 0.6;
+            --accent-gold: #e8a820;
+        }
+
+        /* 
+         ========================================================================
+         RESET Y TIPOGRAFÍAS AUTÓNOMAS DE SISTEMA (100% OFFLINE)
+         ========================================================================
+        */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: radial-gradient(circle at center, var(--bg-body-1) 0%, var(--bg-body-2) 100%);
+            color: var(--text-primary);
+            font-family: Georgia, "Times New Roman", Garamond, serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            position: relative;
+            overflow-x: hidden;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        /* Efecto de viñeta cinematográfica en bordes de pantalla */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle, transparent 55%, rgba(0,0,0,0.85) 100%);
+            pointer-events: none;
+            opacity: var(--vignette-opacity);
+            z-index: 5;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Estilos tipográficos estilo imprenta antigua */
+        .font-headline {
+            font-family: "Cinzel", "Times New Roman", Georgia, serif;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .font-typewriter {
+            font-family: "Courier New", Courier, monospace;
+            letter-spacing: 0.05em;
+        }
+
+        /* 
+         ========================================================================
+         ESTRUCTURA Y MARCO ART DÉCO DE LOS AÑOS 40
+         ========================================================================
+        */
+        .art-deco-container {
+            width: 100%;
+            max-width: 580px;
+            background-color: var(--card-bg);
+            border: 4px solid var(--accent-gold);
+            outline: 2px solid var(--card-border-outer);
+            outline-offset: -8px;
+            border-radius: 6px;
+            padding: 2rem 1.5rem;
+            box-shadow: 0 15px 35px var(--shadow-drop), inset 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+            margin: auto 0;
+            transition: all 0.5s ease;
+        }
+
+        /* Adornos de esquina Art Déco */
+        .corner-deco {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-color: var(--accent-gold);
+            pointer-events: none;
+        }
+        .corner-tl { top: 6px; left: 6px; border-top: 3px solid; border-left: 3px solid; }
+        .corner-tr { top: 6px; right: 6px; border-top: 3px solid; border-right: 3px solid; }
+        .corner-bl { bottom: 6px; left: 6px; border-bottom: 3px solid; border-left: 3px solid; }
+        .corner-br { bottom: 6px; right: 6px; border-bottom: 3px solid; border-right: 3px solid; }
+
+        /* Placa de Latón / Bronce Grabado */
+        .brass-plaque {
+            background: var(--brass-grad);
+            border: 2px solid var(--brass-border);
+            color: #120c02;
+            padding: 6px 16px;
+            border-radius: 3px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            text-align: center;
+            box-shadow: 0 4px 8px var(--brass-shadow), inset 0 1px 2px rgba(255,255,255,0.5);
+            display: inline-block;
+        }
+
+        /* 
+         ========================================================================
+         DISPLAY DE TAMBOR MECÁNICO (MARCADOR RETRO DE RUECA)
+         ========================================================================
+        */
+        .counter-drum-box {
+            background-color: var(--counter-bg);
+            border: 3px solid var(--brass-border);
+            border-radius: 6px;
+            padding: 8px 18px;
+            display: inline-flex;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 8px 12px rgba(0,0,0,0.9), 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        /* Línea media divisoria entre rodillos mecánicos */
+        .counter-drum-box::after {
+            content: "";
+            position: absolute;
+            top: 50%; left: 0; right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+
+        .counter-digits {
+            font-family: "Georgia", "Times New Roman", serif;
+            font-weight: bold;
+            color: var(--counter-text);
+            text-shadow: 0 0 10px rgba(232, 168, 32, 0.3), 0 2px 4px rgba(0,0,0,0.9);
+            line-height: 1;
+            letter-spacing: 0.1em;
+            transition: transform 0.12s ease-in-out;
+        }
+
+        .tick-bump {
+            animation: mechanicalTick 0.15s ease-in-out;
+        }
+
+        @keyframes mechanicalTick {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-3px) scale(1.06); }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        /* 
+         ========================================================================
+         BOTONES PULSADORES MECÁNICOS DE LATÓN
+         ========================================================================
+        */
+        .btn-brass {
+            background: var(--brass-grad);
+            border: 2px solid var(--brass-border);
+            color: #140d02;
+            font-family: Georgia, serif;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 4px 0px #3d2b07, 0 5px 8px var(--shadow-drop);
+            transition: all 0.08s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-brass:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-brass:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0px #3d2b07, 0 2px 4px var(--shadow-drop);
+        }
+
+        .btn-top-control {
+            background-color: var(--card-bg);
+            border: 2px solid var(--accent-gold);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            font-family: "Courier New", monospace;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 3px 6px var(--shadow-drop);
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-top-control:hover {
+            background-color: var(--accent-gold);
+            color: #120c02;
+        }
+
+        /* 
+         ========================================================================
+         DIAL ANALÓGICO ESTILO SINTONIZADOR DE RADIO
+         ========================================================================
+        */
+        .radio-dial-wrapper {
+            background-color: var(--dial-bg);
+            border: 2px solid var(--brass-border);
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: inset 0 0 12px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .dial-grid {
+            height: 14px;
+            width: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--dial-grid) 0px,
+                var(--dial-grid) 2px,
+                transparent 2px,
+                transparent 10px
+            );
+            border-bottom: 2px solid var(--accent-gold);
+            position: relative;
+        }
+
+        .dial-needle {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 3px;
+            background-color: #d90429;
+            box-shadow: 0 0 6px #ff2b4a;
+            transition: left 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .dial-bar-container {
+            height: 10px;
+            width: 100%;
+            background-color: rgba(0,0,0,0.6);
+            border-radius: 2px;
+            overflow: hidden;
+            display: flex;
+            margin-top: 6px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .bar-men {
+            background-color: var(--male-color);
+            height: 100%;
+            transition: width 0.35s ease;
+        }
+
+        .bar-women {
+            background-color: var(--female-color);
+            height: 100%;
+            transition: width 0.35s ease;
+        }
+
+        /* Sello oficial de capacidad */
+        .capacity-stamp {
+            border: 2px dashed var(--stamp-border);
+            background-color: var(--stamp-bg);
+            color: var(--stamp-text);
+            font-family: "Courier New", monospace;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            display: inline-block;
+            transform: rotate(-1deg);
+            transition: all 0.3s ease;
+        }
+
+        .capacity-stamp.full {
+            border-style: solid;
+            border-color: #d90429;
+            background-color: rgba(217, 4, 41, 0.15);
+            color: #d90429;
+            font-weight: bold;
+            animation: stampPulse 1.2s infinite alternate;
+        }
+
+        @keyframes stampPulse {
+            0% { transform: rotate(-1deg) scale(1); }
+            100% { transform: rotate(-1deg) scale(1.03); }
+        }
+
+        /* Clases utilitarias de disposición */
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .text-center { text-align: center; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+    </style>
+</head>
+<body>
+
+    <!-- 
+     ========================================================================
+     ENCABEZADO PRINCIPAL Y BOTONES DE CONTROL DE ÉPOCA
+     ========================================================================
+    -->
+    <header style="width: 100%; max-width: 580px;" class="flex-between mb-3">
+        <div>
+            <span class="font-typewriter" style="font-size: 0.65rem; text-transform: uppercase; opacity: 0.8;">
+                — REGISTRO OFICIAL 1942 —
+            </span>
+            <h1 class="font-headline" style="font-size: 1.4rem; font-weight: bold; color: var(--accent-gold);">
+                CONTADOR VINTAGE
+            </h1>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+            <!-- Botón Mute / Unmute Sonido -->
+            <button id="btn-sound" onclick="toggleSound()" class="btn-top-control" title="Activar / Desactivar Sonido Mecánico">
+                <svg id="svg-sound-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <span id="txt-sound">Sonido On</span>
+            </button>
+
+            <!-- Botón Cambio de Modo (Prensa vs Film Noir) -->
+            <button id="btn-theme" onclick="toggleTheme()" class="btn-top-control" title="Alternar Modo Prensa / Film Noir">
+                <svg id="svg-theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <span id="txt-theme">Modo Noir</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 
+     ========================================================================
+     TARJETA PRINCIPAL EN ESTILO ART DÉCO
+     ========================================================================
+    -->
+    <main class="art-deco-container">
+        <!-- Esquinas decorativas geométrica -->
+        <div class="corner-deco corner-tl"></div>
+        <div class="corner-deco corner-tr"></div>
+        <div class="corner-deco corner-bl"></div>
+        <div class="corner-deco corner-br"></div>
+
+        <!-- Encabezado en placa de bronce -->
+        <div class="text-center mb-3">
+            <div class="brass-plaque">
+                Aforo General de Concurrencia
+            </div>
+        </div>
+
+        <!-- Sección de Contador Total -->
+        <section class="text-center mb-4">
+            <p class="font-typewriter" style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
+                Total de Ocupantes Registrados
+            </p>
+
+            <div class="counter-drum-box">
+                <span id="total-count" class="counter-digits" style="font-size: 3.8rem;">
+                    000
+                </span>
+            </div>
+
+            <div class="mt-2">
+                <div id="capacity-stamp" class="capacity-stamp">
+                    AFORO PERMITIDO: 0 / 30 PERSONAS
+                </div>
+            </div>
+        </section>
+
+        <!-- Medidor Analógico estilo Sintonizador de Radio -->
+        <section class="mb-4">
+            <div class="flex-between font-typewriter mb-1" style="font-size: 0.7rem;">
+                <span id="txt-men-pc" style="color: var(--male-color); font-weight: bold;">Caballeros: 0%</span>
+                <span style="color: var(--accent-gold); text-transform: uppercase;">DIAL ANALÓGICO</span>
+                <span id="txt-women-pc" style="color: var(--female-color); font-weight: bold;">Damas: 0%</span>
+            </div>
+
+            <div class="radio-dial-wrapper">
+                <div class="dial-grid">
+                    <div id="radio-needle" class="dial-needle" style="left: 50%;"></div>
+                </div>
+                <div class="dial-bar-container">
+                    <div id="bar-men" class="bar-men" style="width: 50%;"></div>
+                    <div id="bar-women" class="bar-women" style="width: 50%;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 
+         ========================================================================
+         SUBCONTADORES DE CABALLEROS Y DAMAS
+         ========================================================================
+        -->
+        <section class="grid-2col mt-3" style="border-top: 1px solid rgba(138, 104, 51, 0.25); padding-top: 1rem;">
+            <!-- CABALLEROS -->
+            <article class="text-center" style="background: rgba(0,0,0,0.04); padding: 0.75rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.08);">
+                <!-- Icono Sombrero de Copa Vintage SVG Inline -->
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="color: var(--male-color); margin: 0 auto 4px auto;">
+                    <path d="M5 19h14v2H5zM6 17h12l-1-9H7zM8 8V4h8v4z"/>
+                </svg>
+                <div class="font-typewriter" style="font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">Caballeros</div>
+
+                <div class="counter-drum-box" style="padding: 4px 10px; margin-bottom: 8px;">
+                    <span id="men-count" class="counter-digits" style="font-size: 2rem;">00</span>
+                </div>
+
+                <div style="display: flex; gap: 6px; justify-content: center;">
+                    <button onclick="updateCount('men', -1)" aria-label="Restar caballero" class="btn-brass" style="width: 36px; height: 36px; font-size: 1.2rem;">-</button>
+                    <button onclick="updateCount('men', 1)" aria-label="Añadir caballero" class="btn-brass" style="width: 36px; height: 36px; font-size: 1.2rem;">+</button>
+                </div>
+            </article>
+
+            <!-- DAMAS -->
+            <article class="text-center" style="background: rgba(0,0,0,0.04); padding: 0.75rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.08);">
+                <!-- Icono Sombrero / Silueta Vintage SVG Inline -->
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="color: var(--female-color); margin: 0 auto 4px auto;">
+                    <path d="M12 2C8.69 2 6 4.69 6 8c0 2.22 1.21 4.15 3 5.19V17h6v-3.81c1.79-1.04 3-2.97 3-5.19 0-3.31-2.69-6-6-6zm-2 17h4v2h-4z"/>
+                </svg>
+                <div class="font-typewriter" style="font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px;">Damas</div>
+
+                <div class="counter-drum-box" style="padding: 4px 10px; margin-bottom: 8px;">
+                    <span id="women-count" class="counter-digits" style="font-size: 2rem;">00</span>
+                </div>
+
+                <div style="display: flex; gap: 6px; justify-content: center;">
+                    <button onclick="updateCount('women', -1)" aria-label="Restar dama" class="btn-brass" style="width: 36px; height: 36px; font-size: 1.2rem;">-</button>
+                    <button onclick="updateCount('women', 1)" aria-label="Añadir dama" class="btn-brass" style="width: 36px; height: 36px; font-size: 1.2rem;">+</button>
+                </div>
+            </article>
+        </section>
+
+        <!-- Botón de Reiniciar -->
+        <div class="text-center mt-4">
+            <button onclick="resetCounter()" class="btn-brass" style="padding: 6px 18px; font-size: 0.75rem; text-transform: uppercase;">
+                <!-- Icono Engranaje / Reset SVG Inline -->
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6M1 20v-6h6"></path>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Restablecer Marcador
+            </button>
+        </div>
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="font-typewriter text-center mt-3" style="font-size: 0.65rem; opacity: 0.75;">
+        © 1942 Imprenta & Taller Mecánico S.A. — Sistema Autónomo Offline
+    </footer>
+
+    <!-- 
+     ========================================================================
+     CÓDIGO JAVASCRIPT: LÓGICA DE ESTADO, AUDIO Y TEMAS (100% OFFLINE)
+     ========================================================================
+    -->
+    <script>
+        // Capacidad máxima de personas autorizadas
+        const MAX_CAPACITY = 30;
+
+        // Recuperar datos almacenados en localStorage
+        let men = parseInt(localStorage.getItem('v1940_offline_men')) || 0;
+        let women = parseInt(localStorage.getItem('v1940_offline_women')) || 0;
+        let soundEnabled = localStorage.getItem('v1940_offline_sound') !== 'disabled';
+
+        /*
+         ========================================================================
+         SINTETIZADOR DE AUDIO MECÁNICO (WEB AUDIO API)
+         No requiere archivos MP3/WAV ni conexión a internet.
+         ========================================================================
+        */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Sintetiza el chasquido metálico de un contador manual de mano
+        function playClickSound() {
+            if (!soundEnabled) return;
+
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                // 1. Golpe de trinquete metálico agudo
+                const oscHigh = audioCtx.createOscillator();
+                const gainHigh = audioCtx.createGain();
+                oscHigh.type = 'triangle';
+                oscHigh.frequency.setValueAtTime(3400, now);
+                oscHigh.frequency.exponentialRampToValueAtTime(700, now + 0.02);
+
+                gainHigh.gain.setValueAtTime(0.2, now);
+                gainHigh.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+
+                oscHigh.connect(gainHigh);
+                gainHigh.connect(audioCtx.destination);
+                oscHigh.start(now);
+                oscHigh.stop(now + 0.02);
+
+                // 2. Golpe metálico hueco grave (Resonancia de la caja)
+                const oscLow = audioCtx.createOscillator();
+                const gainLow = audioCtx.createGain();
+                oscLow.type = 'sine';
+                oscLow.frequency.setValueAtTime(220, now);
+                oscLow.frequency.exponentialRampToValueAtTime(50, now + 0.035);
+
+                gainLow.gain.setValueAtTime(0.25, now);
+                gainLow.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+
+                oscLow.connect(gainLow);
+                gainLow.connect(audioCtx.destination);
+                oscLow.start(now);
+                oscLow.stop(now + 0.035);
+            } catch (e) {
+                console.warn("Audio no disponible:", e);
+            }
+        }
+
+        /*
+         ========================================================================
+         LÓGICA DEL CONTADOR Y ACTUALIZACIÓN DE INTERFAZ
+         ========================================================================
+        */
+        function triggerAnimation(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.classList.remove('tick-bump');
+            void el.offsetWidth; // Forzar reflow CSS
+            el.classList.add('tick-bump');
+        }
+
+        function updateCount(type, change) {
+            const currentTotal = men + women;
+
+            if (type === 'men') {
+                if (change < 0 && men > 0) men--;
+                else if (change > 0 && currentTotal < MAX_CAPACITY) men++;
+            } else if (type === 'women') {
+                if (change < 0 && women > 0) women--;
+                else if (change > 0 && currentTotal < MAX_CAPACITY) women++;
+            }
+
+            playClickSound();
+            saveAndRender();
+
+            if (type === 'men') triggerAnimation('men-count');
+            else triggerAnimation('women-count');
+            triggerAnimation('total-count');
+        }
+
+        function resetCounter() {
+            if (men === 0 && women === 0) return;
+            men = 0;
+            women = 0;
+            playClickSound();
+            saveAndRender();
+            triggerAnimation('total-count');
+        }
+
+        function saveAndRender() {
+            // Guardar en almacenamiento local
+            localStorage.setItem('v1940_offline_men', men);
+            localStorage.setItem('v1940_offline_women', women);
+
+            const total = men + women;
+
+            // Renderizar números con formato de 2 y 3 dígitos
+            document.getElementById('men-count').innerText = String(men).padStart(2, '0');
+            document.getElementById('women-count').innerText = String(women).padStart(2, '0');
+            document.getElementById('total-count').innerText = String(total).padStart(3, '0');
+
+            // Actualizar Sello de Aforo
+            const stamp = document.getElementById('capacity-stamp');
+            if (total >= MAX_CAPACITY) {
+                stamp.innerText = `¡AFORO COMPLETO! (${total} / ${MAX_CAPACITY} RESTRINGIDO)`;
+                stamp.classList.add('full');
+            } else {
+                stamp.innerText = `AFORO PERMITIDO: ${total} / ${MAX_CAPACITY} PERSONAS`;
+                stamp.classList.remove('full');
+            }
+
+            // Calcular porcentajes
+            const malePercent = total > 0 ? Math.round((men / total) * 100) : 50;
+            const femalePercent = total > 0 ? Math.round((women / total) * 100) : 50;
+
+            const displayMalePercent = total > 0 ? Math.round((men / total) * 100) : 0;
+            const displayFemalePercent = total > 0 ? Math.round((women / total) * 100) : 0;
+
+            document.getElementById('txt-men-pc').innerText = `Caballeros: ${displayMalePercent}%`;
+            document.getElementById('txt-women-pc').innerText = `Damas: ${displayFemalePercent}%`;
+
+            // Actualizar agujas y barras del dial analógico
+            document.getElementById('bar-men').style.width = malePercent + '%';
+            document.getElementById('bar-women').style.width = femalePercent + '%';
+            document.getElementById('radio-needle').style.left = malePercent + '%';
+        }
+
+        /*
+         ========================================================================
+         GESTIÓN DE TEMA (MODO PRENSA VS FILM NOIR) Y SONIDO
+         ========================================================================
+        */
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('v1940_offline_theme', isDark ? 'dark' : 'light');
+            updateThemeUI(isDark);
+            playClickSound();
+        }
+
+        function updateThemeUI(isDark) {
+            const txtTheme = document.getElementById('txt-theme');
+            const svgIcon = document.getElementById('svg-theme-icon');
+
+            if (isDark) {
+                txtTheme.innerText = 'Modo Prensa';
+                // Icono Sol SVG
+                svgIcon.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+            } else {
+                txtTheme.innerText = 'Modo Noir';
+                // Icono Luna SVG
+                svgIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('v1940_offline_sound', soundEnabled ? 'enabled' : 'disabled');
+            updateSoundUI();
+            if (soundEnabled) playClickSound();
+        }
+
+        function updateSoundUI() {
+            const txtSound = document.getElementById('txt-sound');
+            const svgSound = document.getElementById('svg-sound-icon');
+
+            if (soundEnabled) {
+                txtSound.innerText = 'Sonido On';
+                svgSound.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+            } else {
+                txtSound.innerText = 'Mute';
+                svgSound.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>`;
+            }
+        }
+
+        // Inicialización al cargar el DOM
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('v1940_offline_theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                updateThemeUI(true);
+            } else {
+                updateThemeUI(false);
+            }
+
+            updateSoundUI();
+            saveAndRender();
+        });
+    </script>
+</body>
+</html>
